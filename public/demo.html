@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Document</title>
+	</head>
+
+
+	<body>
+		<script defer crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+		<script defer crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"/></script>
+		<script defer src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+
+		<div id="root">
+		</div>
+		<h1>This is hello from H1</h1>
+		<h2>This is other hello</h2>
+		<script type="text/babel">
+			
+
+			console.log("Hei, third, when loading babel done -> it will execute");	
+		</script>
+		<script>
+
+			console.log("First load, loading the script tag after dom construct, parsed done");
+			
+			document.addEventListener("DOMContentLoaded", () => {
+				console.log("document load dom, second, html parser done and defer script all load");
+			});
+
+		window.addEventListener("load", () => {
+				console.log("Heli, four, all scrip, image, link... loading done");
+				const getMessage = () => "Hello World";
+				document.getElementById("root").innerHTML = getMessage();
+			})
+		</script>
+	</body>
+
+</html>
