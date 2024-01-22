@@ -15,26 +15,40 @@
 
 		<div id="root">
 		</div>
+
 		<h1>This is hello from H1</h1>
 		<h2>This is other hello</h2>
-		<script type="text/babel">
-			
 
-			console.log("Hei, third, when loading babel done -> it will execute");	
+		<div id="container"></div>
+		<script type="text/babel">
+			console.log("Hei, third, when loading babel done -> it will execute");
+
+			const element = <h1>Hello world!</h1>
+			console.log(element);
+
+			const root = ReactDOM.createRoot(
+				document.getElementById('container')
+			);
+
+			root.render(element);
 		</script>
 		<script>
 
 			console.log("First load, loading the script tag after dom construct, parsed done");
-			
+
 			document.addEventListener("DOMContentLoaded", () => {
 				console.log("document load dom, second, html parser done and defer script all load");
 			});
 
-		window.addEventListener("load", () => {
+			window.addEventListener("load", () => {
 				console.log("Heli, four, all scrip, image, link... loading done");
 				const getMessage = () => "Hello World";
 				document.getElementById("root").innerHTML = getMessage();
 			})
+
+			document.addEventListener("readystatechange", (event) => {
+				console.log("Hello");
+			});
 		</script>
 	</body>
 
