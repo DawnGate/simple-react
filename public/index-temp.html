@@ -12,42 +12,149 @@
 		<main id="root"></main>
 		<script type="text/babel">
 
-			const Model = () => {}
+			const FormInput = (props) => {
+				//refs
+				const inputRef = React.useRef(null)
+				// states
+				const [inputFocus, setInputFocus] = React.useState(false)
+
+				// variables
+				const additionalClassName = ` ${inputFocus ? "focused" : ""}`
+
+
+				// events
+				
+				const handleClickContainer = () => {
+					inputRef.current.focus()
+				}
+
+				const handleOnInputFocus = () => {
+					setInputFocus(true)		
+				}
+
+				const handleOnInputBlur = () => {
+					setInputFocus(false)
+				}
+
+				return (
+					<div className={"form-input" + additionalClassName} onClick={handleClickContainer}>
+						<div className="form-content">
+							<div className="form-label">
+								<span>Name</span>
+							</div>
+							<div className="form-input-field">
+								<input
+									{...props.inputProps}
+									onFocus={handleOnInputFocus}
+									onBlur={handleOnInputBlur}
+									ref={inputRef}
+									id="form-signup-name"
+									type="text" />
+							</div>
+						</div>
+						<div className="form-helper">
+							<div>{props.errorMsg}</div>
+						</div>
+					</div>
+				)
+			}
+
+			const ModalSignUpContent = () => {
+				return (
+					<div className="form-content-sign-up">
+						<div className="form-title">
+							<p>Create your account</p>
+						</div>
+						<div className="form-container">
+							<FormInput inputProps={{autoFocus: true}}/>	
+							<FormInput />
+
+							<div className="form-divider"></div>
+
+							<Button title="Submit" isDisabled kind="primary" style={{ minHeight: 50 }} />
+						</div>
+					</div>
+				)
+			}
+
+			const Modal = (props) => {		
+				return (
+					<div className="modal">
+						<div className="overlay">
+							<div className="modal-container">
+								<div className="modal-header">
+									<button className="close-modal-btn" onClick={props.handleClose}>
+										<svg viewBox="0 0 24 24" ariaHidden="true" style={{color: "rgb(15, 20, 25"}}><g><path d="M10.59 12L4.54 5.96l1.42-1.42L12 10.59l6.04-6.05 1.42 1.42L13.41 12l6.05 6.04-1.42 1.42L12 13.41l-6.04 6.05-1.42-1.42L10.59 12z"></path></g></svg>
+									</button>
+								</div>
+								<div className="modal-content">
+									{props.content}
+								</div>
+							</div>
+						</div>
+					</div>
+				)
+			}
 
 			const Button = (props) => {
+					const isDisabled = props.isDisabled
+
+					const handleClick = () => {
+						if(isDisabled) return;		
+						props.handleClick();
+					}
+
 					return (
-						<div class="button">
-								<span class="btn-title">{props.title}</span>
+						<div className={`button ${isDisabled && "disabled"}`} role="button" style={props.style} onClick={handleClick}>
+								<span className="btn-title">{props.title}</span>
 						</div>
 					)
 			}
 
 			const UnAuthForm = () => {
+				// state
+				const [showSignUpModal, setShowSignUpModal] = React.useState(false)
+
+				// events
+
+				const handleCloseModal = () => {
+					setShowSignUpModal(false)
+				}
+
+				const handleOpenModal = () => {
+					setShowSignUpModal(true)
+				}
+
+				// render
 				return (
-					<div class="unauth-form">
-						<div class="title">
+					<div className="unauth-form">
+						<div className="title">
 							<p>Happening now</p>
 						</div>
-						<div class="sub-title">
+						<div className="sub-title">
 							<p>Join today</p>
 						</div>
-						<div class="form-content">
-							<Button title="Create account" kind="primary" />
+						<div className="form-content">
+							<Button title="Create account" style={{maxWidth: 300}} handleClick={handleOpenModal}/>
 						</div>
+						{
+							showSignUpModal 
+							&& ReactDOM.createPortal(<Modal handleClose={handleCloseModal} content={<ModalSignUpContent />}/>, document.body)
+						}
 					</div>
 				)
 			}
 
 			const App = () => {
 					return (
-						<div class="main-app">
-							<div class="left-container">
-								<div class="logo-banner">
+						<div className="main-app">
+							<div className="left-container">
+								<div className="logo-banner">
 									<svg viewBox="0 0 24 24" aria-hidden="true"><g><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></g></svg>
 								</div>
 							</div>
-							<div class="right-container">
-								<div class="form-container">	
+							<div className="right-container">
+								<div className="form-container">	
 									<UnAuthForm />
 								</div>
 							</div>
@@ -61,7 +168,12 @@
 		<style>	
 			:root {
 				--border-color: rgb(207, 217, 222);
+				--border-action-color: rgb(29, 155, 240);
 				--primary: rgb(29, 155, 240);
+				--btn-background: rgba(29, 155, 240, 0.1);
+				--secondary: rgb(83, 100, 113);
+				--white: rgb(255,255,255);
+				--btn-disabled: rgb(15, 20, 15);
 			}
 
 			html{
@@ -97,11 +209,24 @@
 				}
 			}	
 
-			.right-container .form-container {
-				padding: 16px;	
+			.right-container {
+				display: none;
+				align-items: center;
+				min-width: 45vw;
+
+				.form-container {
+					padding: 16px;	
+				}
+			} 
+
+			@media screen and (min-width: 1024px) {
+				.right-container {
+						display: flex;
+				}	
 			}
 
 			.unauth-form {
+				min-width: 437px;
 				padding: 20px;
 
 				.title {
@@ -128,8 +253,10 @@
 				display: flex;
 				justify-content: center;
 				align-items: center;
+				cursor: pointer;
 
 				min-height: 36px;
+				transition: background-color 0.2s;
 
 
 				.btn-title {
@@ -142,6 +269,179 @@
 			.button {
 				border: 1px solid var(--border-color);
 				border-radius: 9999px;
+				
+				color: var(--primary);
+				background-color: rgba(0,0,0,0);
+			}
+
+			.button:hover {	
+				background-color: var(--btn-background)
+			}
+
+			.button.disabled {
+				background-color: var(--btn-disabled);
+				color: var(--white);
+				opacity: 0.5;
+				cursor: default;
+				border: none;
+			}
+
+			.modal {
+				position: fixed;	
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				min-height: 100dvh;
+
+				.overlay {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+
+					height: 100%;
+					background-color: rgba(0, 0, 0, 0.4);
+				}
+
+				.modal-container {
+					min-width: 600px;
+					max-width: 80vw;
+
+					min-height: 400px;
+					max-height: 90vh;
+
+					overflow-x: hidden;
+					overflow-y: hidden;
+
+					border-radius: 16px;
+					background-color: rgba(255, 255, 255, 1);
+
+					display: flex;
+					flex-direction: column;
+
+					.modal-header {
+						display: flex;
+						align-items: center;
+
+						height: 53px;	
+						padding: 0 16px;
+
+						.close-modal-btn {
+								width: 36px;
+								height: 36px;
+								display: flex;
+								align-items: center;
+								justify-content: center;
+
+								cursor: pointer;
+								border-radius: 999px;
+
+								border: none;
+								outline: none;
+								background: transparent;
+
+								background-color: rgba(15, 20, 25, 0);
+								transition: background-color 0.2s;
+
+								svg {
+									height: 20px;
+								}
+						}
+
+						.close-modal-btn:hover {
+								background-color: rgba(15, 20, 25, 0.1);
+						}
+					}
+
+					.modal-content {
+						display: flex;
+						flex: 1;
+
+						overflow-x: auto;
+						overflow-y: auto;
+					}
+				}
+
+				.form-content-sign-up {
+					width: 100%;
+
+					padding: 0 80px;
+
+					.form-title {
+						margin: 20px 0;
+
+						font-size: 31px;
+						line-height: 36px;
+						font-weight: 700;
+					}
+
+					.form-divider {
+						padding: 16px 0;
+					}
+						
+				}
+			}
+
+			.form-input {
+				padding: 12px 0;
+
+				.form-helper {}
+
+				.form-content {
+					height: 56px;
+					border: 1px solid var(--border-color);
+					border-radius: 4px;
+
+					overflow: hidden;
+					position: relative;
+				}
+
+				.form-label {
+					position: absolute;
+					top: 0;
+					left: 0;
+					padding: 16px 8px 0 8px;
+					display: block;
+
+					transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0s, color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0s, font-size 150ms cubic-bezier(0.4, 0, 0.2, 1) 0s, padding-top 150ms cubic-bezier(0.4, 0, 0.2, 1) 0s;
+					color: var(--secondary);
+					font-size: 17px;	
+					line-height: 24px;
+
+					span {
+						font-weight: 400;
+						display: block;
+					}
+				}
+
+				input {
+					margin-top: 16px;
+					padding: 8px;
+					padding-top: 12px;
+					line-height: 20px;
+
+					outline: none;
+					border: none;
+					width: 100%;
+					box-sizing: border-box;
+				}
+
+				
+			}
+
+			.form-input.focused {
+					.form-content {
+						box-shadow: var(--border-action-color) 0 0 0 1px;
+						border-color: var(--border-action-color);
+					}
+
+					.form-label {
+						padding-top: 8px;
+
+						color: var(--border-action-color);
+						line-height: 16px;
+						font-size: 13px;
+					}
 			}
 
 		</style>
