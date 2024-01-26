@@ -7,10 +7,22 @@
 		<script defer crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 		<script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 		<link rel="stylesheet" href="https://unpkg.com/normalize.css">
+
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 	</head>
 	<body>
 		<main id="root"></main>
 		<script type="text/babel">
+
+			const LoadingOverlay = () => {
+				return (
+					<div className="loader-overlay">
+						<div className="loader-spinner"></div>
+					</div>
+				)
+			}
 
 			const FormInput = (props) => {
 				//refs
@@ -58,7 +70,6 @@
 									onFocus={handleOnInputFocus}
 									onBlur={handleOnInputBlur}
 									ref={inputRef}
-									id="form-signup-name"
 									type="text"
 									value={value}
 									onChange={handleChange}
@@ -83,16 +94,41 @@
 					isUpdateEmail: false,
 				})
 
+				// idle, loading, success, error
+				const [signUpStatus, setSignUpStatus] = React.useState('idle')
+
 				// variables
 				const isNameInvalid = !Boolean(data.name.trim()) && data.isUpdateName
 				const isEmailInvalid = !emailRegex.test(data.email.trim()) && data.isUpdateEmail
+				const isCanSubmit = !isNameInvalid && !isEmailInvalid && data.name && data.email
+
+				const isSubmitting = signUpStatus === "loading"
+				const isSubmitSuccess = signUpStatus === "success"
 
 				// events
-				const handleSubmit = () => {
-					console.log({
+				const handleSubmit = async () => {
+					// TODO: handle submit when user try to enter in the input
+					const submitData = {
 						name: data.name.trim(),
 						email: data.email.trim()
-					})
+					}
+
+					try {
+						const promise = new Promise((resolve) => {
+							setTimeout(() => {
+								console.log("Sending....");
+								resolve(submitData)
+							}, 5000)
+						})
+
+						setSignUpStatus("loading")
+						const value = await promise
+						setSignUpStatus("success")
+						console.log("Submit data:", value)
+					} catch(err) {
+						setSignUpStatus("error")
+						console.log("Some problem occur")
+					}
 				}
 
 				const handleChangeName = (value) => {
@@ -116,6 +152,22 @@
 				}
 
 				// render
+
+				if(isSubmitSuccess){
+					// TODO: break a new notify component, but I lazy a littlebit :V
+					return (
+						<div class="form-notify">
+							<div class="notify-banner">
+								<svg xmlns="http://www.w3.org/2000/svg" width="88" height="92" viewBox="0 0 88 92" fill="none"><path d="M87.7417 21.0334C87.6583 18.0417 85.5042 15.5084 82.575 15.0042C65.4833 12.3917 49.0417 2.2292 47.2917 1.13337C45.4583 -0.087462 42.8167 -0.216629 40.7417 1.13337C40.5792 1.2167 23.2833 12.2667 5.3375 15.0042C2.4875 15.5125 0.333333 18.0417 0.25 21.1209C0.25 23.1875 0.370831 71.85 41.6375 91.3292C42.45 91.6625 43.2625 91.8334 43.9958 91.8334C45.0125 91.8334 45.9083 91.5375 46.4792 91.2834C88.6375 71.3834 87.7833 21.3292 87.7417 21.0334ZM40.9458 83.95C6.4375 65.3084 6.35417 23.0167 6.27083 21.2459C20.9208 19.0125 34.9208 11.7167 40.9417 8.30004V83.95H40.9458ZM47.05 83.95V8.30004C53.1542 11.8 67.1125 19.0542 81.6417 21.2875C81.6375 21.7084 82.5333 64.8459 47.05 83.95Z" fill="#0F1419"/></svg>	
+							</div>
+							<div class="notify-content">
+								<p class="notify-title">Authenticate your account</p>
+								<p class="notify-subtitle">Check your email to make sure that you're a real person.</p>
+							</div>
+						</div>
+					)
+				}
+
 				return (
 					<div className="form-content-sign-up">
 						<div className="form-title">
@@ -124,7 +176,7 @@
 						<div className="form-container">
 							<FormInput
 								title="Name"
-								inputProps={{autoFocus: true}}
+								inputProps={{autoFocus: true, maxlength: 50}}
 								isError={isNameInvalid}
 								handleChange={handleChangeName}
 								errorMsg={"What's your name?"}
@@ -132,6 +184,7 @@
 
 							<FormInput
 								title="Email"
+								inputProps={{maxlength: 254}}
 								isError={isEmailInvalid}
 								handleChange={handleChangeEmail}
 								errorMsg={"Please enter a valid email."}
@@ -139,8 +192,15 @@
 
 							<div className="form-divider"></div>
 
-							<Button title="Submit" isDisabled kind="primary" style={{ minHeight: 50 }} />
+							<Button
+								title="Submit"
+								isDisabled={!isCanSubmit} 
+								kind="primary" 
+								style={{ minHeight: 50 }}
+								handleClick={handleSubmit}
+							/>
 						</div>
+						{isSubmitting && <LoadingOverlay />}
 					</div>
 				)
 			}
@@ -173,7 +233,13 @@
 					}
 
 					return (
-						<div className={`button ${isDisabled && "disabled"}`} role="button" style={props.style} onClick={handleClick}>
+						<div 
+							className={`button ${isDisabled && "disabled"} ${props.kind}`}
+							role="button"
+							disabled={isDisabled}
+							style={props.style}
+							onClick={handleClick}
+							>
 								<span className="btn-title">{props.title}</span>
 						</div>
 					)
@@ -203,7 +269,7 @@
 							<p>Join today</p>
 						</div>
 						<div className="form-content">
-							<Button title="Create account" style={{maxWidth: 300}} handleClick={handleOpenModal}/>
+							<Button title="Create account" kind="primary" style={{maxWidth: 300}} handleClick={handleOpenModal}/>
 						</div>
 						{
 							showSignUpModal 
@@ -238,6 +304,7 @@
 				--border-color: rgb(207, 217, 222);
 				--border-action-color: rgb(29, 155, 240);
 				--primary: rgb(29, 155, 240);
+				--primary-hover: rgb(26, 140, 216);
 				--btn-background: rgba(29, 155, 240, 0.1);
 				--secondary: rgb(83, 100, 113);
 				--white: rgb(255,255,255);
@@ -246,7 +313,7 @@
 			}
 
 			html{
-				font-family: Roboto, apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+				font-family: "Roboto", apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 				color: rgb(15, 20, 15);
 			}
 
@@ -347,12 +414,26 @@
 				background-color: var(--btn-background)
 			}
 
+			.button.primary {
+					color: var(--white);
+					border: none;
+					background-color: var(--primary);
+			}
+
+			.button.primary:hover {
+					background-color: var(--primary-hover);
+			}
+
 			.button.disabled {
 				background-color: var(--btn-disabled);
 				color: var(--white);
 				opacity: 0.5;
 				cursor: default;
 				border: none;
+			}
+
+			.button.disabled:hover {
+				background-color: var(--btn-disabled);
 			}
 
 			.modal {
@@ -434,6 +515,8 @@
 				.form-content-sign-up {
 					width: 100%;
 
+					position: relative;
+
 					padding: 0 80px;
 
 					.form-title {
@@ -467,6 +550,7 @@
 
 					overflow: hidden;
 					position: relative;
+					box-shadow: transparent 0 0 0 1px;
 				}
 
 				.form-label {
@@ -487,16 +571,21 @@
 					}
 				}
 
-				input {
+				.form-input-field {
 					margin-top: 16px;
 					padding: 8px;
 					padding-top: 12px;
-					line-height: 20px;
+				}
 
+				input {
+					line-height: 20px;
+					font-size: 17px;
 					outline: none;
 					border: none;
 					width: 100%;
 					box-sizing: border-box;
+					margin: 0;
+					padding: 0;
 				}	
 			}
 
@@ -505,23 +594,32 @@
 			}
 
 			.form-input.focused, .form-input.valued {
+					.form-label {
+						padding-top: 8px;
+						line-height: 16px;
+						font-size: 13px;
+					}
+			}
+
+			.form-input.focused {
 					.form-content {
 						box-shadow: var(--border-action-color) 0 0 0 1px;
 						border-color: var(--border-action-color);
 					}
 
 					.form-label {
-						padding-top: 8px;
-
 						color: var(--border-action-color);
-						line-height: 16px;
-						font-size: 13px;
 					}
+			}
+
+			.form-input.focused.errored {
+				.form-content {
+					box-shadow: var(--error) 0 0 0 1px;
+				}
 			}
 
 			.form-input.errored {
 				.form-content {
-					box-shadow: var(--error) 0 0 0 1px;
 					border-color: var(--error);
 				}
 
@@ -531,6 +629,75 @@
 
 				.form-helper {
 					color: var(--error);
+				}
+			}
+
+			.loader-overlay {
+					position: absolute;	
+					width: 100%;
+					height: 100%;
+					top: 0;
+					left: 0;
+
+					background: var(--white);
+					opacity: 0.5;
+
+					display: flex;
+					justify-content: center;
+					align-items: center;
+
+					.loader-spinner {
+						width: 48px;
+						height: 48px;
+						border: 5px solid var(--primary);
+						border-bottom-color: transparent;
+						border-radius: 50%;
+						display: inline-block;
+						box-sizing: border-box;
+						animation: rotation 1s linear infinite;
+					}
+			}
+			@keyframes rotation {
+				0% {
+					transform: rotate(0deg);
+				}
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+
+			.form-notify {
+				padding: 7px 24px;
+
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+
+				text-align: center;
+				
+				.notify-banner {
+					width: 20%;	
+					martin-top: 10%;
+					margint-bottom: 5%;
+				}
+				.notify-content {
+					width: 90%;
+					.notify-title {
+						margin-top: 10%;
+						font-weight: 700;
+						font-size: 31px;
+						line-height: 36px;
+						letter-spacing: -0.2px;
+						color: #0F1419;
+					}
+					.notify-subtitle {
+						margin-top: 5%;
+						font-size: 15px;
+						line-height: 20px;
+						font-weight:400;
+					}
 				}
 			}
 		</style>
