@@ -15,11 +15,13 @@
 			const FormInput = (props) => {
 				//refs
 				const inputRef = React.useRef(null)
+				const timeOutRef = React.useRef(null)
 				// states
 				const [inputFocus, setInputFocus] = React.useState(false)
+				const [value, setValue] = React.useState(props.defaultValue ?? '')
 
 				// variables
-				const additionalClassName = ` ${inputFocus ? "focused" : ""}`
+				const additionalClassName = ` ${inputFocus ? "focused" : "" } ${value ? "valued" : "value"} ${props.isError ? "errored" : ""}`
 
 
 				// events
@@ -36,11 +38,19 @@
 					setInputFocus(false)
 				}
 
+				const handleChange = (e) => {
+					setValue(e.target.value)
+					clearTimeout(timeOutRef.current)
+					timeOutRef.current = setTimeout(() => {
+						props.handleChange(e.target.value)
+					}, 250)
+				}
+
 				return (
 					<div className={"form-input" + additionalClassName} onClick={handleClickContainer}>
 						<div className="form-content">
 							<div className="form-label">
-								<span>Name</span>
+								<span>{props.title}</span>
 							</div>
 							<div className="form-input-field">
 								<input
@@ -49,25 +59,83 @@
 									onBlur={handleOnInputBlur}
 									ref={inputRef}
 									id="form-signup-name"
-									type="text" />
+									type="text"
+									value={value}
+									onChange={handleChange}
+									/>
 							</div>
 						</div>
 						<div className="form-helper">
-							<div>{props.errorMsg}</div>
+							<div>{props.isError && props.errorMsg}</div>
 						</div>
 					</div>
 				)
 			}
 
+			const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
 			const ModalSignUpContent = () => {
+				//states
+				const [data, setData] = React.useState({
+					name: '',
+					isUpdateName: false,
+					email: '',
+					isUpdateEmail: false,
+				})
+
+				// variables
+				const isNameInvalid = !Boolean(data.name.trim()) && data.isUpdateName
+				const isEmailInvalid = !emailRegex.test(data.email.trim()) && data.isUpdateEmail
+
+				// events
+				const handleSubmit = () => {
+					console.log({
+						name: data.name.trim(),
+						email: data.email.trim()
+					})
+				}
+
+				const handleChangeName = (value) => {
+					setData(prev => {
+						if(!prev.isUpdateName){
+							return {...prev, name: value, isUpdateName: true}	
+						}
+
+						return {...prev, name: value}
+					})	
+				}
+
+				const handleChangeEmail = (value) => {
+					setData(prev => {
+						if(!prev.isUpdateEmail){
+							return {...prev, email: value, isUpdateEmail: true}	
+						}
+
+						return {...prev, email: value}
+					})
+				}
+
+				// render
 				return (
 					<div className="form-content-sign-up">
 						<div className="form-title">
 							<p>Create your account</p>
 						</div>
 						<div className="form-container">
-							<FormInput inputProps={{autoFocus: true}}/>	
-							<FormInput />
+							<FormInput
+								title="Name"
+								inputProps={{autoFocus: true}}
+								isError={isNameInvalid}
+								handleChange={handleChangeName}
+								errorMsg={"What's your name?"}
+							/>	
+
+							<FormInput
+								title="Email"
+								isError={isEmailInvalid}
+								handleChange={handleChangeEmail}
+								errorMsg={"Please enter a valid email."}
+							/>
 
 							<div className="form-divider"></div>
 
@@ -174,6 +242,7 @@
 				--secondary: rgb(83, 100, 113);
 				--white: rgb(255,255,255);
 				--btn-disabled: rgb(15, 20, 15);
+				--error: rgb(244, 33, 46);
 			}
 
 			html{
@@ -187,7 +256,7 @@
 			}
 
 			.main-app {	
-				width: 100vw;
+				width: 100%;
 				height: 100vh;
 				display: flex;
 			}
@@ -385,7 +454,11 @@
 			.form-input {
 				padding: 12px 0;
 
-				.form-helper {}
+				.form-helper {
+					font-size: 13px;
+					line-height: 16px;
+					font-weight: 400;
+				}
 
 				.form-content {
 					height: 56px;
@@ -424,12 +497,14 @@
 					border: none;
 					width: 100%;
 					box-sizing: border-box;
-				}
-
-				
+				}	
 			}
 
-			.form-input.focused {
+			.form-input.value:not(.focused) .form-label {
+				color: var(--secondary) !important;
+			}
+
+			.form-input.focused, .form-input.valued {
 					.form-content {
 						box-shadow: var(--border-action-color) 0 0 0 1px;
 						border-color: var(--border-action-color);
@@ -444,6 +519,20 @@
 					}
 			}
 
+			.form-input.errored {
+				.form-content {
+					box-shadow: var(--error) 0 0 0 1px;
+					border-color: var(--error);
+				}
+
+				.form-label {
+					color: var(--error);
+				}
+
+				.form-helper {
+					color: var(--error);
+				}
+			}
 		</style>
 	</body>
 </html>
